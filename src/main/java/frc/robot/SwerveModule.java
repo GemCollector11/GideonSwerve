@@ -32,7 +32,7 @@ public class SwerveModule {
   private final PIDController drivePIDController = new PIDController(1, 0, 0);
 
   // Gains are for example purposes only - must be determined for your own robot!
-  private final ProfiledPIDController m_turningPIDController =
+  private final ProfiledPIDController turningPIDController =
       new ProfiledPIDController(
           1,
           0,
@@ -79,7 +79,7 @@ public class SwerveModule {
 
     // Limit the PID Controller's input range between -pi and pi and set the input
     // to be continuous.
-    m_turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
+    turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   /**
@@ -127,11 +127,11 @@ public class SwerveModule {
 
     // Calculate the turning motor output from the turning PID controller.
     final double turnOutput =
-        m_turningPIDController.calculate(
+        turningPIDController.calculate(
             turningEncoder.getDistance(), desiredState.angle.getRadians());
 
     final double turnFeedforward =
-        m_turnFeedforward.calculate(m_turningPIDController.getSetpoint().velocity);
+        m_turnFeedforward.calculate(turningPIDController.getSetpoint().velocity);
 
     driveMotor.setVoltage(driveOutput + driveFeedforward);
     turningMotor.setVoltage(turnOutput + turnFeedforward);
