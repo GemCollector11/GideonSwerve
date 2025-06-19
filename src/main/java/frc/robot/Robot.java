@@ -8,28 +8,60 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import subsystems.Drivetrain;
 
 public class Robot extends TimedRobot {
-  private final XboxController m_controller = new XboxController(0);
-  private final Drivetrain m_swerve = new Drivetrain();
+  //private final XboxController m_controller = new XboxController(0);
+  //private final Drivetrain m_swerve = new Drivetrain();
 
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
-  private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(3);
-  private final SlewRateLimiter m_yspeedLimiter = new SlewRateLimiter(3);
-  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
+  //private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(3);
+  //private final SlewRateLimiter m_yspeedLimiter = new SlewRateLimiter(3);
+  //private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
+  private final RobotContainer robotContainer;
+ 
+  public Robot() {
+    robotContainer = new RobotContainer();
+  }
+
+  @Override
+  public void robotPeriodic() {
+    CommandScheduler.getInstance().run();
+  }
+
+  @Override
+  public void disabledInit() {}
+
+  @Override
+  public void disabledPeriodic() {}
+
+  @Override
+  public void disabledExit() {}
+
+  @Override
+  public void autonomousInit() {}
+
 
   @Override
   public void autonomousPeriodic() {
-    driveWithJoystick(false);
-    m_swerve.updateOdometry();
+    //driveWithJoystick(false);
+    //m_swerve.updateOdometry();
   }
 
   @Override
+  public void autonomousExit() {}
+
+  @Override
+  public void teleopInit() {}
+
+  @Override
   public void teleopPeriodic() {
-    driveWithJoystick(true);
+
+    //driveWithJoystick(true);
   }
 
-  private void driveWithJoystick(boolean fieldRelative) {
+  /*private void driveWithJoystick(boolean fieldRelative) {
     // Get the x speed. We are inverting this because Xbox controllers return
     // negative values when we push forward.
     final var xSpeed =
@@ -52,5 +84,5 @@ public class Robot extends TimedRobot {
             * Drivetrain.kMaxAngularSpeed;
 
     m_swerve.drive(xSpeed, ySpeed, rot, fieldRelative, getPeriod());
-  }
+  }*/
 }

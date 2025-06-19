@@ -2,29 +2,36 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot;
+package subsystems;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.SwerveModule;
 
 /** Represents a swerve drive style drivetrain. */
-public class Drivetrain {
+public class Drivetrain extends SubsystemBase{
   public static final double kMaxSpeed = 3.0; // 3 meters per second
   public static final double kMaxAngularSpeed = Math.PI; // 1/2 rotation per second
-
+//private final DifferentialDriveOdometry odometry;
+//TODO: add in actual values in module locations.
   private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
   private final Translation2d m_frontRightLocation = new Translation2d(0.381, -0.381);
   private final Translation2d m_backLeftLocation = new Translation2d(-0.381, 0.381);
   private final Translation2d m_backRightLocation = new Translation2d(-0.381, -0.381);
 
-  private final SwerveModule m_frontLeft = new SwerveModule(1, 2, 0, 1, 2, 3);
-  private final SwerveModule m_frontRight = new SwerveModule(3, 4, 4, 5, 6, 7);
-  private final SwerveModule m_backLeft = new SwerveModule(5, 6, 8, 9, 10, 11);
-  private final SwerveModule m_backRight = new SwerveModule(7, 8, 12, 13, 14, 15);
+  private final SwerveModule m_frontLeft = new SwerveModule(1, 2, 0);
+  private final SwerveModule m_frontRight = new SwerveModule(3, 4, 1);
+  private final SwerveModule m_backLeft = new SwerveModule(5, 6, 2);
+  private final SwerveModule m_backRight = new SwerveModule(7, 8, 3);
 
   private final AnalogGyro m_gyro = new AnalogGyro(0);
 
@@ -83,4 +90,25 @@ public class Drivetrain {
           m_backRight.getPosition()
         });
   }
+  @Override
+    public void periodic() {
+
+        updateOdometry();
+        super.periodic();
+    }
+ /*  public void resetOdometry(Pose2d pose2d) {
+        odometry.resetPosition(
+            new Rotation2d(0), 
+            0,
+            0, 
+            pose2d);
+    }
+    public void resetEncoders() {
+        leftEncoder.setPosition(0);
+        rightEncoder.setPosition(0);
+    }
+    public void resetAll() {
+        resetEncoders();
+        resetOdometry(new Pose2d());        
+    }*/
 }
