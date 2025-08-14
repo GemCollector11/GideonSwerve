@@ -1,23 +1,25 @@
 package frc.robot;
 
-
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import frc.robot.commands.ManualDrive;
 import subsystems.Drivetrain;
 
 public class RobotContainer {
 
     private final Drivetrain drivetrain = new Drivetrain();
-
-    private final CommandJoystick driveStick = new CommandJoystick(0);
+    private final Joystick joystick = new Joystick(0, 1, 2, 3, 4);
 
     public RobotContainer(){
         drivetrain.setDefaultCommand(new ManualDrive(drivetrain,
-        () -> driveStick.getRawAxis(1),
-        () -> driveStick.getRawAxis(2),
-        () -> driveStick.getRawAxis(3)
+        () -> joystick.getRawAxis(1),
+        () -> joystick.getRawAxis(0),
+        () -> joystick.getRawAxis(2),
+        () -> joystick.getRawAxis(3) + 1,
+        () -> joystick.getAsBoolean(1),
+        () -> joystick.getAsBoolean(2),
+        () -> joystick.getAsBoolean(3),
+        () -> joystick.getAsBoolean(4)
         ));
-        configureBindings();
+
     }
     private void configureBindings() {
 

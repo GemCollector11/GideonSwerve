@@ -4,54 +4,105 @@
 
 package subsystems;
 
-import edu.wpi.first.math.geometry.Pose2d;
+import com.studica.frc.AHRS;
+import com.studica.frc.AHRS.NavXComType;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.SwerveModule;
 
 /** Represents a swerve drive style drivetrain. */
 public class Drivetrain extends SubsystemBase{
-  public static final double kMaxSpeed = 3.0; // 3 meters per second
-  public static final double kMaxAngularSpeed = Math.PI; // 1/2 rotation per second
+  public static final double kMaxSpeed = 10; // 4.2 meters per second
+  public static final double kMaxAngularSpeed = 180; // 1/2 rotation per second
 //private final DifferentialDriveOdometry odometry;
-//TODO: add in actual values in module locations.
-  private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
-  private final Translation2d m_frontRightLocation = new Translation2d(0.381, -0.381);
-  private final Translation2d m_backLeftLocation = new Translation2d(-0.381, 0.381);
-  private final Translation2d m_backRightLocation = new Translation2d(-0.381, -0.381);
 
-  private final SwerveModule m_frontLeft = new SwerveModule(1, 2, 0);
-  private final SwerveModule m_frontRight = new SwerveModule(3, 4, 1);
-  private final SwerveModule m_backLeft = new SwerveModule(5, 6, 2);
-  private final SwerveModule m_backRight = new SwerveModule(7, 8, 3);
+  private Translation2d frontLeftLocation = new Translation2d(0.3125, 0.3125);
+  private Translation2d frontRightLocation = new Translation2d(-0.3125, 0.3125);
+  private Translation2d backLeftLocation = new Translation2d(0.3125, -0.3125);
+  private Translation2d backRightLocation = new Translation2d(-0.3125, -0.3125);
 
-  private final AnalogGyro m_gyro = new AnalogGyro(0);
+  public final SwerveModule frontLeft = new SwerveModule(1, 2, 0,false, false);
+  public final SwerveModule frontRight = new SwerveModule(3, 4, 1,false,false);
+  public final SwerveModule backLeft = new SwerveModule(5, 6, 2, false, false);
+  public final SwerveModule backRight = new SwerveModule(7, 8, 3,false, false);
 
-  private final SwerveDriveKinematics m_kinematics =
+  public final AHRS gyro = new AHRS(NavXComType.kUSB1);
+
+  private double rotationXVal;
+  private double rotationYval;
+
+
+  private SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(
-          m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation, m_backRightLocation);
+          frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation);
 
-  private final SwerveDriveOdometry m_odometry =
+        public void setRotationPoint(int rotpoint, double meterOffSet){
+          double yOffset;
+          double xOffset;
+          if(rotpoint == 1){
+            yOffset = 0;
+            xOffset = 0.625 + meterOffSet;
+          }else if(rotpoint == 3){
+            yOffset = 0;
+            xOffset = -0.625 - meterOffSet;
+          }else if(rotpoint == 4){
+            yOffset = 0.625 + meterOffSet;
+            xOffset = 0;}
+          else if (rotpoint == 2){
+            yOffset = -0.625 - meterOffSet;
+            xOffset = 0;
+          }else{
+            yOffset = 0;
+            xOffset = 0;
+          }
+
+          rotationXVal = xOffset;
+          rotationYval = yOffset;
+
+          frontLeftLocation = new Translation2d(0.3125 + xOffset, 0.3125 + yOffset);
+          frontRightLocation = new Translation2d(-0.3125 + xOffset, 0.3125 + yOffset);
+          backLeftLocation = new Translation2d(0.3125 + xOffset, -0.3125 + yOffset);
+          backRightLocation = new Translation2d(-0.3125 + xOffset, -0.3125 + yOffset);
+
+          kinematics =
+            new SwerveDriveKinematics(
+                frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation);
+        
+                updateOdometry();
+
+          odometry =
+            new SwerveDriveOdometry(
+                kinematics,
+                gyro.getRotation2d(),
+                new SwerveModulePosition[] {
+                  frontLeft.getPosition(),
+                  frontRight.getPosition(),
+                  backLeft.getPosition(),
+                  backRight.getPosition()
+                });
+  }
+
+  private SwerveDriveOdometry odometry =
       new SwerveDriveOdometry(
-          m_kinematics,
-          m_gyro.getRotation2d(),
+          kinematics,
+          gyro.getRotation2d(),
           new SwerveModulePosition[] {
-            m_frontLeft.getPosition(),
-            m_frontRight.getPosition(),
-            m_backLeft.getPosition(),
-            m_backRight.getPosition()
+            frontLeft.getPosition(),
+            frontRight.getPosition(),
+            backLeft.getPosition(),
+            backRight.getPosition()
           });
 
   public Drivetrain() {
-    m_gyro.reset();
+    gyro.reset();
   }
 
   /**
@@ -62,37 +113,56 @@ public class Drivetrain extends SubsystemBase{
    * @param rot Angular rate of the robot.
    * @param fieldRelative Whether the provided x and y speeds are relative to the field.
    */
+
+
   public void drive(
-      double xSpeed, double ySpeed, double rot, boolean fieldRelative, double periodSeconds) {
+    double xSpeed, double ySpeed, double rot, boolean fieldRelative, double periodSeconds) {
+
+    SmartDashboard.putNumber("rotVal:", rot);
+
     var swerveModuleStates =
-        m_kinematics.toSwerveModuleStates(
+        kinematics.toSwerveModuleStates(
             ChassisSpeeds.discretize(
                 fieldRelative
                     ? ChassisSpeeds.fromFieldRelativeSpeeds(
-                        xSpeed, ySpeed, rot, m_gyro.getRotation2d())
+                        xSpeed, ySpeed, rot, gyro.getRotation2d())
                     : new ChassisSpeeds(xSpeed, ySpeed, rot),
                 periodSeconds));
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
-    m_frontLeft.setDesiredState(swerveModuleStates[0]);
-    m_frontRight.setDesiredState(swerveModuleStates[1]);
-    m_backLeft.setDesiredState(swerveModuleStates[2]);
-    m_backRight.setDesiredState(swerveModuleStates[3]);
+    frontLeft.setDesiredState(swerveModuleStates[1]);
+    frontRight.setDesiredState(swerveModuleStates[3]);
+    backLeft.setDesiredState(swerveModuleStates[0]);
+    backRight.setDesiredState(swerveModuleStates[2]);
+  }
+
+  public double getHeading(){
+    //double heading = gyro.getAngle();
+    return Math.IEEEremainder(gyro.getAngle(), 360);
+  }
+  public Rotation2d getHeadingRot2d(){
+    return gyro.getRotation2d();
   }
 
   /** Updates the field relative position of the robot. */
   public void updateOdometry() {
-    m_odometry.update(
-        m_gyro.getRotation2d(),
+    odometry.update(
+        gyro.getRotation2d(),
         new SwerveModulePosition[] {
-          m_frontLeft.getPosition(),
-          m_frontRight.getPosition(),
-          m_backLeft.getPosition(),
-          m_backRight.getPosition()
+          frontLeft.getPosition(),
+          frontRight.getPosition(),
+          backLeft.getPosition(),
+          backRight.getPosition()
         });
   }
   @Override
     public void periodic() {
 
+        SmartDashboard.putNumber("xoffset:", rotationXVal);
+        SmartDashboard.putNumber("yoffset:", rotationYval);  
+        SmartDashboard.putNumber("robot angle", getHeading());
+        SmartDashboard.putNumber("gyro Rotation2D", gyro.getRotation2d().getDegrees());
+        SmartDashboard.putNumber("drive encoder(DE):", (frontLeft.getDriveEncoder() + frontRight.getDriveEncoder() + backLeft.getDriveEncoder() + backRight.getDriveEncoder())/4);
+        SmartDashboard.putNumber("distance travelled meters", ((frontLeft.getDriveEncoder() + frontRight.getDriveEncoder() + backLeft.getDriveEncoder() + backRight.getDriveEncoder())/4) / 1691.853);
         updateOdometry();
         super.periodic();
     }
