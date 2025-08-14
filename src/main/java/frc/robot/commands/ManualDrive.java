@@ -50,9 +50,9 @@ public class ManualDrive extends Command {
         driveRotation = -rotationZaxis.get(); 
         slider = -sliderVAL.get(); 
 
-        XSpeed = MathUtil.applyDeadband(driveLeftAxis,0.15);
-        YSpeed = MathUtil.applyDeadband(driveRightAxis, 0.15);
-        rotationSpeed= MathUtil.applyDeadband(driveRotation, 0.15);
+        XSpeed = MathUtil.clamp(MathUtil.applyDeadband(driveLeftAxis,0.15), -2.0, 2.0);
+        YSpeed = MathUtil.clamp(MathUtil.applyDeadband(driveRightAxis,0.15), -2.0, 2.0);
+        rotationSpeed= MathUtil.clamp(MathUtil.applyDeadband(driveRotation,0.15), -2.0, 2.0);
 
         if(rotPoint1.get()){
             rotationPoint = 1;
@@ -66,6 +66,6 @@ public class ManualDrive extends Command {
             rotationPoint = 0;
         }
         drivetrain.setRotationPoint(rotationPoint, -slider / 2);
-        drivetrain.drive(XSpeed, YSpeed, rotationSpeed, true, 0.02);
+        drivetrain.drive(XSpeed, YSpeed, rotationSpeed, false, 0.02);
     }
 }

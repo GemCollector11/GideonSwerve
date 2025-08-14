@@ -126,7 +126,7 @@ public class Drivetrain extends SubsystemBase{
                 fieldRelative
                     ? ChassisSpeeds.fromFieldRelativeSpeeds(
                         xSpeed, ySpeed, rot * 2, gyro.getRotation2d())
-                    : new ChassisSpeeds(xSpeed, ySpeed, rot),
+                    : new ChassisSpeeds(MathUtil.clamp(xSpeed, -2.0, 2.0), MathUtil.clamp(ySpeed, -2.0, 2.0), MathUtil.clamp(rot, -2.0, 2.0)),
                 periodSeconds));
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
     frontLeft.setDesiredState(swerveModuleStates[1]);
