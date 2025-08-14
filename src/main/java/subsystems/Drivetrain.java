@@ -125,7 +125,7 @@ public class Drivetrain extends SubsystemBase{
             ChassisSpeeds.discretize(
                 fieldRelative
                     ? ChassisSpeeds.fromFieldRelativeSpeeds(
-                        xSpeed, ySpeed, rot, gyro.getRotation2d())
+                        xSpeed, ySpeed, rot * 2, gyro.getRotation2d())
                     : new ChassisSpeeds(xSpeed, ySpeed, rot),
                 periodSeconds));
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
@@ -138,9 +138,6 @@ public class Drivetrain extends SubsystemBase{
   public double getHeading(){
     //double heading = gyro.getAngle();
     return Math.IEEEremainder(gyro.getAngle(), 360);
-  }
-  public Rotation2d getHeadingRot2d(){
-    return gyro.getRotation2d();
   }
 
   /** Updates the field relative position of the robot. */
