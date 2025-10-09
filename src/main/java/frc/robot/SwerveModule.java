@@ -16,22 +16,19 @@ import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.units.Units;
 import subsystems.Drivetrain;
 
 public class SwerveModule {
-  private static final double WheelRadius = 1.5;
   private static final int EncoderResolution = 4096;
-  private static final double WheelRadiusInCM = WheelRadius / 2.54;
-  private static final double conversionFactor = (WheelRadiusInCM * Math.PI * 2) * 16.91853;
+  private static final double WheelCircumprenceMeters = ((3.7 * 0.0254) * Math.PI);
+  private static final double gearRatio = 6.75;
+  private static final double conversionFactor = WheelCircumprenceMeters / gearRatio;
+  private double maxvel = 0;
 
   private static final double ModuleMaxAngularVelocity = Drivetrain.kMaxAngularSpeed;
   private static final double ModuleMaxAngularAcceleration = 2 * Math.PI;
@@ -82,7 +79,7 @@ public class SwerveModule {
     driveMotorConfig.idleMode(IdleMode.kBrake);
     driveMotorConfig.inverted(IsDriveReversed);
     driveMotorConfig.encoder.positionConversionFactor(conversionFactor);
-    
+    driveMotorConfig.encoder.velocityConversionFactor(conversionFactor / 60);
 
     SparkBaseConfig turningMotorConfig = new SparkMaxConfig();
     turningMotorConfig.idleMode(IdleMode.kBrake);
@@ -120,6 +117,25 @@ public class SwerveModule {
   
   public Double getDriveEncoder(){
     return driveEncoder.getPosition();
+  }
+
+  public Double getVelocity(){
+    return driveEncoder.getVelocity();
+  }
+
+  public void resetDriveEncoder(){
+    driveEncoder.setPosition(0);
+  }
+
+  public Double getMaxVelocity(){
+    
+    double currentvelocity = getVelocity();
+
+    if(currentvelocity > maxvel){
+      maxvel = currentvelocity;
+    }
+
+    return maxvel;
   }
 
   /**

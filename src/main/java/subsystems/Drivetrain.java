@@ -8,21 +8,32 @@ import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import frc.robot.SwerveModule;
 
 /** Represents a swerve drive style drivetrain. */
 public class Drivetrain extends SubsystemBase{
-  public static final double kMaxSpeed = 10; // 4.2 meters per second
+  public final double kMaxSpeed = 4.2; // 4.2 meters per second
+  public static final double kmaxAccel = 4.2;
   public static final double kMaxAngularSpeed = 180; // 1/2 rotation per second
 //private final DifferentialDriveOdometry odometry;
+    private final PIDController yErrorPIDController = new PIDController(0.066, 0, 0);
+    private final PIDController xErrorPIDController = new PIDController(0.066, 0, 0);
+    private final ProfiledPIDController autonThetaController = new ProfiledPIDController(0.066, 0, 0, new Constraints(Math.PI * 4, kmaxAccel)); // 1.5
 
   private Translation2d frontLeftLocation = new Translation2d(0.3125, 0.3125);
   private Translation2d frontRightLocation = new Translation2d(-0.3125, 0.3125);
@@ -34,6 +45,8 @@ public class Drivetrain extends SubsystemBase{
   public final SwerveModule backLeft = new SwerveModule(5, 6, 2, false, false);
   public final SwerveModule backRight = new SwerveModule(7, 8, 3,false, false);
 
+  public final SwerveModule[] swerveModules = {backLeft, frontLeft, backRight, frontRight};
+
   public final AHRS gyro = new AHRS(NavXComType.kUSB1);
 
   private double rotationXVal;
@@ -44,50 +57,49 @@ public class Drivetrain extends SubsystemBase{
       new SwerveDriveKinematics(
           frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation);
 
-        public void setRotationPoint(int rotpoint, double meterOffSet){
-          double yOffset;
-          double xOffset;
-          if(rotpoint == 1){
-            yOffset = 0;
-            xOffset = 0.625 + meterOffSet;
-          }else if(rotpoint == 3){
-            yOffset = 0;
-            xOffset = -0.625 - meterOffSet;
-          }else if(rotpoint == 4){
-            yOffset = 0.625 + meterOffSet;
-            xOffset = 0;}
-          else if (rotpoint == 2){
-            yOffset = -0.625 - meterOffSet;
-            xOffset = 0;
-          }else{
-            yOffset = 0;
-            xOffset = 0;
-          }
+  public void setRotationPoint(int rotpoint, double meterOffSet){
+    double yOffset;
+    double xOffset;
+    if(rotpoint == 1){
+      yOffset = 0;
+      xOffset = 0.625 + meterOffSet;
+    }else if(rotpoint == 3){
+      yOffset = 0;
+      xOffset = -0.625 - meterOffSet;
+    }else if(rotpoint == 4){
+      yOffset = 0.625 + meterOffSet;
+      xOffset = 0;
+    }else if (rotpoint == 2){
+      yOffset = -0.625 - meterOffSet;
+      xOffset = 0;
+    }else{
+      yOffset = 0;
+      xOffset = 0;
+    }
 
-          rotationXVal = xOffset;
-          rotationYval = yOffset;
+    rotationXVal = xOffset;
+    rotationYval = yOffset;
 
-          frontLeftLocation = new Translation2d(0.3125 + xOffset, 0.3125 + yOffset);
-          frontRightLocation = new Translation2d(-0.3125 + xOffset, 0.3125 + yOffset);
-          backLeftLocation = new Translation2d(0.3125 + xOffset, -0.3125 + yOffset);
-          backRightLocation = new Translation2d(-0.3125 + xOffset, -0.3125 + yOffset);
+    frontLeftLocation = new Translation2d(0.3125 + xOffset, 0.3125 + yOffset);
+    frontRightLocation = new Translation2d(-0.3125 + xOffset, 0.3125 + yOffset);
+    backLeftLocation = new Translation2d(0.3125 + xOffset, -0.3125 + yOffset);
+    backRightLocation = new Translation2d(-0.3125 + xOffset, -0.3125 + yOffset);
 
-          kinematics =
-            new SwerveDriveKinematics(
-                frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation);
-        
-                updateOdometry();
+    kinematics =
+      new SwerveDriveKinematics(
+        frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation);
+        updateOdometry();
 
-          odometry =
-            new SwerveDriveOdometry(
-                kinematics,
-                gyro.getRotation2d(),
-                new SwerveModulePosition[] {
-                  frontLeft.getPosition(),
-                  frontRight.getPosition(),
-                  backLeft.getPosition(),
-                  backRight.getPosition()
-                });
+    odometry =
+      new SwerveDriveOdometry(
+        kinematics,
+        gyro.getRotation2d(),
+        new SwerveModulePosition[] {
+          frontLeft.getPosition(),
+          frontRight.getPosition(),
+          backLeft.getPosition(),
+          backRight.getPosition()
+    });
   }
 
   private SwerveDriveOdometry odometry =
@@ -118,14 +130,14 @@ public class Drivetrain extends SubsystemBase{
   public void drive(
     double xSpeed, double ySpeed, double rot, boolean fieldRelative, double periodSeconds) {
 
-    SmartDashboard.putNumber("rotVal:", rot);
+    SmartDashboard.putNumber("rotVal:", rot * 2);
 
     var swerveModuleStates =
         kinematics.toSwerveModuleStates(
             ChassisSpeeds.discretize(
                 fieldRelative
                     ? ChassisSpeeds.fromFieldRelativeSpeeds(
-                        xSpeed, ySpeed, rot * 2, gyro.getRotation2d())
+                        xSpeed, ySpeed, rot * 2, getRotation2d())
                     : new ChassisSpeeds(MathUtil.clamp(xSpeed, -2.0, 2.0), MathUtil.clamp(ySpeed, -2.0, 2.0), MathUtil.clamp(rot, -2.0, 2.0)),
                 periodSeconds));
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
@@ -140,6 +152,31 @@ public class Drivetrain extends SubsystemBase{
     return Math.IEEEremainder(gyro.getAngle(), 360);
   }
 
+  public Rotation2d getRotation2d(){
+    return Rotation2d.fromDegrees(getHeading());
+  }
+
+  public SwerveDriveKinematics getKinematics(){
+    return kinematics;
+  }
+
+  public HolonomicDriveController getDriveController(){
+    return new HolonomicDriveController(
+      xErrorPIDController,
+      yErrorPIDController,
+      autonThetaController
+      );
+  }
+
+  public Pose2d getPose(){
+    return odometry.getPoseMeters() ;
+  }
+
+  public void setAutonModuleStates(SwerveModuleState[] desiredStates) {
+    for (int i = 0; i < 4; i++) {
+      swerveModules[i].setDesiredState(desiredStates[i]);
+    }
+  }
   /** Updates the field relative position of the robot. */
   public void updateOdometry() {
     odometry.update(
@@ -153,29 +190,27 @@ public class Drivetrain extends SubsystemBase{
   }
   @Override
     public void periodic() {
-
         SmartDashboard.putNumber("xoffset:", rotationXVal);
         SmartDashboard.putNumber("yoffset:", rotationYval);  
-        SmartDashboard.putNumber("robot angle", getHeading());
-        SmartDashboard.putNumber("gyro Rotation2D", gyro.getRotation2d().getDegrees());
+        SmartDashboard.putNumber("robot angle:", getHeading());
+        SmartDashboard.putNumber("gyro Rotation2D:", getRotation2d().getDegrees());
         SmartDashboard.putNumber("drive encoder(DE):", (frontLeft.getDriveEncoder() + frontRight.getDriveEncoder() + backLeft.getDriveEncoder() + backRight.getDriveEncoder())/4);
-        SmartDashboard.putNumber("distance travelled meters", ((frontLeft.getDriveEncoder() + frontRight.getDriveEncoder() + backLeft.getDriveEncoder() + backRight.getDriveEncoder())/4) / 1691.853);
+        SmartDashboard.putNumber("distance travelled meters:", ((frontLeft.getDriveEncoder() + frontRight.getDriveEncoder() + backLeft.getDriveEncoder() + backRight.getDriveEncoder())/4) * 246.23264);
+        SmartDashboard.putNumber("velocity MPS:", frontLeft.getVelocity());
+        SmartDashboard.putNumber("max velocity MPS:", frontLeft.getVelocity());
         updateOdometry();
         super.periodic();
     }
- /*  public void resetOdometry(Pose2d pose2d) {
+    public void setPose(Pose2d pose) {
         odometry.resetPosition(
-            new Rotation2d(0), 
-            0,
-            0, 
-            pose2d);
+            getRotation2d(),
+            new SwerveModulePosition[] {
+                frontLeft.getPosition(),
+                frontRight.getPosition(),
+                backLeft.getPosition(),
+                backRight.getPosition()
+            },
+            pose
+        );
     }
-    public void resetEncoders() {
-        leftEncoder.setPosition(0);
-        rightEncoder.setPosition(0);
-    }
-    public void resetAll() {
-        resetEncoders();
-        resetOdometry(new Pose2d());        
-    }*/
 }
