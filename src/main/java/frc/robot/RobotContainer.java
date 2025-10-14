@@ -33,11 +33,11 @@ public class RobotContainer {
     }
 
     public final void teleopInit(){
-        drivetrain.gyro.reset();
+
     }
 
     public final void autoINIT(){
-        drivetrain.gyro.reset();
+
         drivetrain.frontRight.resetDriveEncoder();
         drivetrain.frontLeft.resetDriveEncoder();
         drivetrain.backRight.resetDriveEncoder();

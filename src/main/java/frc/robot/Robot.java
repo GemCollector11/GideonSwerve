@@ -34,11 +34,10 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     robotContainer.autoINIT();
-    autonomousCommand = robotContainer.getAutoCommand(1 ,0 ,0);
+    autonomousCommand = robotContainer.getAutoCommand(-1 ,0 ,0);
     if(autonomousCommand != null){
       autonomousCommand.schedule();
     }
-    SmartDashboard.putBoolean("is finished?", isAutonomous());
   }
 
 

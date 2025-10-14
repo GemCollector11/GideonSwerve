@@ -14,21 +14,23 @@ public class movement extends SwerveControllerCommand{
 
     private final Drivetrain drivetrain;
 
-
-        //246.23264
-        private static final Pose2d generatePose(double x, double y, Rotation2d rot){
-            return new Pose2d(x, y, rot);
-        }
-
         public static final Trajectory generateTrajectory(Drivetrain drivetrain , double distanceMetersX, double distanceMetersY, Double degrees) {
         double speed = drivetrain.kMaxSpeed / 2;
         double accel = drivetrain.kmaxAccel;
+        boolean isDriveReversed = false;
 
-        double distancex = distanceMetersX * 0.70783932047425234471774907096089 * 0.95165588123334602207841644461363;
-        double distancey = distanceMetersY * 0.70783932047425234471774907096089 * 0.95165588123334602207841644461363;
+        double distancex = distanceMetersX;
+        double distancey = distanceMetersY;
+
+        if(distanceMetersX < 0){
+            isDriveReversed = true;
+            //distancex *= -1;
+        }
+
+
         //0.025760165 = correction factor 
 
-        TrajectoryConfig config = new TrajectoryConfig(speed, accel);
+        TrajectoryConfig config = new TrajectoryConfig(speed, accel).setReversed(isDriveReversed);
 
         Pose2d startPose = new Pose2d(0,0, drivetrain.getRotation2d());
         drivetrain.setPose(startPose);
@@ -36,7 +38,7 @@ public class movement extends SwerveControllerCommand{
         Pose2d endPose = new Pose2d(
             startPose.getX() + distancex,
             startPose.getY() + distancey, 
-            Rotation2d.fromDegrees(Math.IEEEremainder(degrees + startPose.getRotation().getDegrees(),360))
+            Rotation2d.fromDegrees(degrees + startPose.getRotation().getDegrees())
         );
 
         List<Pose2d> poseList = List.of(startPose, endPose);

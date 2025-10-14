@@ -50,9 +50,9 @@ public class ManualDrive extends Command {
         driveRotation = -rotationZaxis.get(); 
         slider = -sliderVAL.get(); 
 
-        XSpeed = MathUtil.clamp(MathUtil.applyDeadband(driveLeftAxis,0.15), -2.0, 2.0);
-        YSpeed = MathUtil.clamp(MathUtil.applyDeadband(driveRightAxis,0.15), -2.0, 2.0);
-        rotationSpeed= MathUtil.clamp(MathUtil.applyDeadband(driveRotation,0.45), -2.0, 2.0);
+        XSpeed = MathUtil.clamp(MathUtil.applyDeadband(driveLeftAxis,0.15), -1.0, 1.0);
+        YSpeed = MathUtil.clamp(MathUtil.applyDeadband(driveRightAxis,0.15), -1.0, 1.0);
+        rotationSpeed= MathUtil.clamp(MathUtil.applyDeadband(driveRotation,0.45), -1.0, 1.0);
 
         if(rotPoint1.get()){
             rotationPoint = 1;

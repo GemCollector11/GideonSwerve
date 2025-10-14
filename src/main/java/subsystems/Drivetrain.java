@@ -48,7 +48,6 @@ public class Drivetrain extends SubsystemBase{
   public final SwerveModule[] swerveModules = {backLeft, frontLeft, backRight, frontRight};
 
   public final AHRS gyro = new AHRS(NavXComType.kUSB1);
-
   private double rotationXVal;
   private double rotationYval;
 
@@ -138,7 +137,7 @@ public class Drivetrain extends SubsystemBase{
                 fieldRelative
                     ? ChassisSpeeds.fromFieldRelativeSpeeds(
                         xSpeed, ySpeed, rot * 2, getRotation2d())
-                    : new ChassisSpeeds(MathUtil.clamp(xSpeed, -2.0, 2.0), MathUtil.clamp(ySpeed, -2.0, 2.0), MathUtil.clamp(rot, -2.0, 2.0)),
+                    : new ChassisSpeeds(MathUtil.clamp(xSpeed, -1.0, 1.0), MathUtil.clamp(ySpeed, -1.0, 1.0), MathUtil.clamp(rot, -2.0, 2.0)),
                 periodSeconds));
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
     frontLeft.setDesiredState(swerveModuleStates[1]);
@@ -148,8 +147,11 @@ public class Drivetrain extends SubsystemBase{
   }
 
   public double getHeading(){
-    //double heading = gyro.getAngle();
     return Math.IEEEremainder(gyro.getAngle(), 360);
+  }
+
+  public double getAbsoluteHeading(){
+    return gyro.getAngle();
   }
 
   public Rotation2d getRotation2d(){
@@ -193,11 +195,9 @@ public class Drivetrain extends SubsystemBase{
         SmartDashboard.putNumber("xoffset:", rotationXVal);
         SmartDashboard.putNumber("yoffset:", rotationYval);  
         SmartDashboard.putNumber("robot angle:", getHeading());
-        SmartDashboard.putNumber("gyro Rotation2D:", getRotation2d().getDegrees());
+        SmartDashboard.putNumber("abs robot angle:", getAbsoluteHeading());
         SmartDashboard.putNumber("drive encoder(DE):", (frontLeft.getDriveEncoder() + frontRight.getDriveEncoder() + backLeft.getDriveEncoder() + backRight.getDriveEncoder())/4);
-        SmartDashboard.putNumber("distance travelled meters:", ((frontLeft.getDriveEncoder() + frontRight.getDriveEncoder() + backLeft.getDriveEncoder() + backRight.getDriveEncoder())/4) * 246.23264);
-        SmartDashboard.putNumber("velocity MPS:", frontLeft.getVelocity());
-        SmartDashboard.putNumber("max velocity MPS:", frontLeft.getVelocity());
+        SmartDashboard.putNumber("distance travelled meters:", ((frontLeft.getDriveEncoder() + frontRight.getDriveEncoder() + backLeft.getDriveEncoder() + backRight.getDriveEncoder())/4) / 246.23264);
         updateOdometry();
         super.periodic();
     }
