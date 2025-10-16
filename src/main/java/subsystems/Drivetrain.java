@@ -29,11 +29,11 @@ import frc.robot.SwerveModule;
 public class Drivetrain extends SubsystemBase{
   public final double kMaxSpeed = 4.2; // 4.2 meters per second
   public static final double kmaxAccel = 4.2;
-  public static final double kMaxAngularSpeed = 180; // 1/2 rotation per second
+  public static final double kMaxAngularSpeed = 4.2 / (0.3125 * Math.PI * 2); // 1 rotation per second
 //private final DifferentialDriveOdometry odometry;
     private final PIDController yErrorPIDController = new PIDController(0.066, 0, 0);
     private final PIDController xErrorPIDController = new PIDController(0.066, 0, 0);
-    private final ProfiledPIDController autonThetaController = new ProfiledPIDController(0.066, 0, 0, new Constraints(Math.PI * 4, kmaxAccel)); // 1.5
+    private final ProfiledPIDController autonThetaController = new ProfiledPIDController(3, 0, 0, new Constraints(Math.PI * 4, kmaxAccel)); // 1.5
 
   private Translation2d frontLeftLocation = new Translation2d(0.3125, 0.3125);
   private Translation2d frontRightLocation = new Translation2d(-0.3125, 0.3125);
@@ -198,6 +198,8 @@ public class Drivetrain extends SubsystemBase{
         SmartDashboard.putNumber("abs robot angle:", getAbsoluteHeading());
         SmartDashboard.putNumber("drive encoder(DE):", (frontLeft.getDriveEncoder() + frontRight.getDriveEncoder() + backLeft.getDriveEncoder() + backRight.getDriveEncoder())/4);
         SmartDashboard.putNumber("distance travelled meters:", ((frontLeft.getDriveEncoder() + frontRight.getDriveEncoder() + backLeft.getDriveEncoder() + backRight.getDriveEncoder())/4) / 246.23264);
+        SmartDashboard.putNumber("turning voltage", frontLeft.getTurningVoltage());
+        SmartDashboard.putNumber("turning velocity", frontLeft.getVelocity());
         updateOdometry();
         super.periodic();
     }

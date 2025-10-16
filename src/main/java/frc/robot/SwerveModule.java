@@ -20,18 +20,14 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.units.Units;
-import subsystems.Drivetrain;
 
 public class SwerveModule {
-  private static final int EncoderResolution = 4096;
+  //private static final int EncoderResolution = 4096;
   private static final double WheelCircumprenceMeters = ((3.7 * 0.0254) * Math.PI);
   private static final double gearRatio = 6.75;
   private static final double conversionFactor = WheelCircumprenceMeters / gearRatio;
-  private double maxvel = 0;
-
-  private static final double ModuleMaxAngularVelocity = Drivetrain.kMaxAngularSpeed;
-  private static final double ModuleMaxAngularAcceleration = 2 * Math.PI;
+  //private static final double ModuleMaxAngularVelocity = Drivetrain.kMaxAngularSpeed;
+  //private static final double ModuleMaxAngularAcceleration = Drivetrain.kMaxAngularSpeed / 2;
    // radians per second squared
 
   private final SparkMax driveMotor;
@@ -59,7 +55,7 @@ public class SwerveModule {
 
   // Gains are for example purposes only - must be determined for your own robot!
   private final SimpleMotorFeedforward simpleDriveFeedforward = new SimpleMotorFeedforward(1, 3);
-  private final SimpleMotorFeedforward turnFeedforward = new SimpleMotorFeedforward(1, 0.5);
+  //private final SimpleMotorFeedforward turnFeedforward = new SimpleMotorFeedforward(1.22, 0.22);
 
   /**
    * Constructs a SwerveModule with a drive motor, turning motor, drive encoder and turning encoder.
@@ -114,6 +110,10 @@ public class SwerveModule {
     * 360;
     return directionEncoderPos;
   }
+
+  public final double getTurningVoltage(){
+    return turningMotor.getOutputCurrent();
+  }
   
   public Double getDriveEncoder(){
     return driveEncoder.getPosition();
@@ -123,19 +123,12 @@ public class SwerveModule {
     return driveEncoder.getVelocity();
   }
 
-  public void resetDriveEncoder(){
-    driveEncoder.setPosition(0);
+  public Double getTurningVelocity(){
+    return driveEncoder.getVelocity();
   }
 
-  public Double getMaxVelocity(){
-    
-    double currentvelocity = getVelocity();
-
-    if(currentvelocity > maxvel){
-      maxvel = currentvelocity;
-    }
-
-    return maxvel;
+  public void resetDriveEncoder(){
+    driveEncoder.setPosition(0);
   }
 
   /**
@@ -177,12 +170,10 @@ public class SwerveModule {
     final double turnOutput = turningPIDController.calculate(
       getAngle(), desiredState.angle.getDegrees());
       
+     //final double turnFeedforward =
+     //  turnFeedforward.calculate(turningPIDController.getSetpoint());
 
-
-    // final double turnFeedforward =
-    //   turnFeedforward.calculate(turningPIDController.getSetpoint().velocity);
-
-    turningMotor.setVoltage(turnOutput /*+ turnFeedforward*/);
+    turningMotor.setVoltage(turnOutput /*+ TurnFeedforward*/);
     driveMotor.setVoltage(driveOutput + driveFeedforward);
     
   }
